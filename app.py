@@ -1,8 +1,9 @@
 import streamlit as st
 from openai import OpenAI
+import os
 import PyPDF2
 import docx
-import os
+import pdfplumber
 
 # 云端隐藏密钥，全程无明文，零泄露
 
@@ -30,25 +31,25 @@ def read_upload_file(uploaded_file):
     file_ext = uploaded_file.name.split(".")[-1].lower()
     text = ""
     try:
-        if file_ext == "pdf":
-            reader = PyPDF2.PdfReader(uploaded_file)
-            for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+        if file_ext == "txt":
+            text = uploaded_file.read().decode("utf-8", errors="ignore")
+        elif file_ext == "pdf":
+            # 用 pdfplumber 读取PDF，兼容性更强
+            with pdfplumber.open(uploaded_file) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
             if not text.strip():
-                return "⚠️ 该PDF为扫描件/加密文件，无法识别文字，请上传可编辑的PDF或Word文档"
+                return "❌ 该PDF为扫描件/加密文件，无法提取文字，请上传可编辑的PDF/Word/TXT"
         elif file_ext == "docx":
             doc = docx.Document(uploaded_file)
             for para in doc.paragraphs:
                 text += para.text + "\n"
-        elif file_ext == "txt":
-            text = uploaded_file.read().decode("utf-8", errors="ignore")
         else:
-            return "❌ 不支持的文件格式，请上传PDF、Word或TXT文件"
+            return "❌ 不支持的文件格式，请上传TXT/PDF/Word"
 
-        # 只保留前3000字，减少传输压力
-        return text[:3000]
+        return text[:3000]  # 只保留前3000字，减少传输压力
     except Exception as e:
         return f"❌ 文档读取异常：{str(e)}"
 
