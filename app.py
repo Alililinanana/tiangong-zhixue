@@ -93,7 +93,7 @@ if user_input:
     with st.chat_message("assistant"):
         with st.spinner("AI快速作答中..."):
             response = client.chat.completions.create(
-                model="doubao-seed-2.0-pro-260215",
+                model="doubao-seed-2-0-pro-260215",
                 messages=[{"role":"system","content":sys_prompt}] + st.session_state.msg,
                 timeout=15,   # 缩短超时，杜绝卡死
                 max_tokens=1500,  # 限制回答长度，提速
