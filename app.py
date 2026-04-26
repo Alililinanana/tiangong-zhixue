@@ -95,8 +95,8 @@ if user_input:
             response = client.chat.completions.create(
                 model="doubao-seed-2-0-pro-260215",
                 messages=[{"role":"system","content":sys_prompt}] + st.session_state.msg,
-                timeout=15,   # 缩短超时，杜绝卡死
-                max_tokens=1500,  # 限制回答长度，提速
+                timeout=60,   # 缩短超时，杜绝卡死
+                max_tokens=3000,  # 限制回答长度，提速
                 temperature=0.7
             )
         ans = response.choices[0].message.content
