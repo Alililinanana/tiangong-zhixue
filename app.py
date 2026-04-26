@@ -27,25 +27,30 @@ level_prompt = {
 
 # 【极速优化】轻量化读取文档 + 强制压缩字数
 def read_upload_file(uploaded_file):
-    content = ""
-    suffix = uploaded_file.name.split(".")[-1].lower()
+    file_ext = uploaded_file.name.split(".")[-1].lower()
+    text = ""
     try:
-        if suffix == "txt":
-            content = uploaded_file.read().decode("utf-8", errors="ignore")
-        elif suffix == "pdf":
+        if file_ext == "pdf":
             reader = PyPDF2.PdfReader(uploaded_file)
             for page in reader.pages:
-                t = page.extract_text()
-                if t:
-                    content += t + "\n"
-        elif suffix == "docx":
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+            if not text.strip():
+                return "⚠️ 该PDF为扫描件/加密文件，无法识别文字，请上传可编辑的PDF或Word文档"
+        elif file_ext == "docx":
             doc = docx.Document(uploaded_file)
-            for p in doc.paragraphs:
-                content += p.text + "\n"
-    except:
-        content = "文档读取异常"
-    # 关键提速：只保留前3000字，大幅减少传输压力
-    return content[:3000]
+            for para in doc.paragraphs:
+                text += para.text + "\n"
+        elif file_ext == "txt":
+            text = uploaded_file.read().decode("utf-8", errors="ignore")
+        else:
+            return "❌ 不支持的文件格式，请上传PDF、Word或TXT文件"
+
+        # 只保留前3000字，减少传输压力
+        return text[:3000]
+    except Exception as e:
+        return f"❌ 文档读取异常：{str(e)}"
 
 # 页面配置 + 加速渲染
 st.set_page_config(page_title="天工智学", page_icon="📚")
